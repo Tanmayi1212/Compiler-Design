@@ -1,9 +1,4 @@
-# =========================================
-# LEXICAL ANALYZER (Production Level)
-# =========================================
-
 import re
-
 
 class Token:
     def __init__(self, type_, value, line, column):
@@ -21,7 +16,8 @@ class LexerError(Exception):
 
 
 class Lexer:
-    KEYWORDS = {"int"}
+    KEYWORDS = {"int","float","if","else","while","for","return"}
+
     TOKEN_SPEC = [
         ("NUMBER",   r'\d+'),
         ("ID",       r'[a-zA-Z_][a-zA-Z0-9_]*'),
@@ -34,9 +30,10 @@ class Lexer:
 
     def __init__(self, code):
         self.code = code
-        self.tokens = []
 
     def tokenize(self):
+        tokens = []
+
         regex = '|'.join(f'(?P<{name}>{pattern})'
                          for name, pattern in self.TOKEN_SPEC)
 
@@ -49,24 +46,23 @@ class Lexer:
             column = match.start() - line_start
 
             if kind == "NUMBER":
-                token = Token("NUMBER", value, line_num, column)
+                tokens.append(Token("NUMBER", value, line_num, column))
 
             elif kind == "ID":
                 if value in self.KEYWORDS:
-                    token = Token("KEYWORD", value, line_num, column)
+                    tokens.append(Token("KEYWORD", value, line_num, column))
                 else:
-                    token = Token("IDENTIFIER", value, line_num, column)
+                    tokens.append(Token("IDENTIFIER", value, line_num, column))
 
             elif kind == "OP":
-                token = Token("OPERATOR", value, line_num, column)
+                tokens.append(Token("OPERATOR", value, line_num, column))
 
             elif kind == "SEMI":
-                token = Token("SEMICOLON", value, line_num, column)
+                tokens.append(Token("SEMICOLON", value, line_num, column))
 
             elif kind == "NEWLINE":
                 line_num += 1
                 line_start = match.end()
-                continue
 
             elif kind == "SKIP":
                 continue
@@ -74,6 +70,4 @@ class Lexer:
             elif kind == "MISMATCH":
                 raise LexerError(f"Unexpected character '{value}' at line {line_num}")
 
-            self.tokens.append(token)
-
-        return self.tokens
+        return tokens
