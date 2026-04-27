@@ -1,38 +1,17 @@
-symbol_table = {}
+from syntax import Assign, Print
 
-def semantic_analysis(ast):
-    print("----- Semantic Analysis Phase -----\n")
 
-    validated_expression = None
+class SemanticAnalyzer:
+    def __init__(self):
+        self.symbols = {}
 
-    for item in ast:
-        if item[0] == "declare":
-            _, dtype, var = item
+    def analyze(self, ast):
+        for node in ast:
+            if isinstance(node, Assign):
+                self.symbols[node.var] = "int"
 
-            if var in symbol_table:
-                raise Exception(f"Variable '{var}' already declared")
+            elif isinstance(node, Print):
+                if node.var not in self.symbols:
+                    raise Exception(f"Semantic Error: {node.var} not defined")
 
-            symbol_table[var] = dtype
-
-        elif item[0] == "assign":
-            _, left, right = item
-
-            if left not in symbol_table:
-                raise Exception(f"Variable '{left}' not declared")
-
-            for token in right:
-                if token.isalpha() and token not in symbol_table:
-                    raise Exception(f"Variable '{token}' not declared")
-
-            validated_expression = (left, right)
-
-    print("Semantic Analysis Successful!\n")
-
-    print("Symbol Table:")
-    for k, v in symbol_table.items():
-        print(f"{k} : {v}")
-
-    print("\nValidated Expression:")
-    print(validated_expression)
-
-    return validated_expression
+        return self.symbols

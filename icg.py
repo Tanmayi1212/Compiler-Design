@@ -1,37 +1,18 @@
-temp_count = 1
-
-def generate_temp():
-    global temp_count
-    t = f"t{temp_count}"
-    temp_count += 1
-    return t
+from syntax import Assign, BinOp, Print
 
 
-def intermediate_code_generation(semantic_output):
-    print("\n----- ICG Phase -----\n")
+class ICG:
+    def generate(self, ast):
+        code = []
 
-    left, tokens = semantic_output
-    tac = []
+        for node in ast:
+            if isinstance(node, Assign):
+                if isinstance(node.expr, BinOp):
+                    code.append(f"{node.var} = {node.expr.left} + {node.expr.right}")
+                else:
+                    code.append(f"{node.var} = {node.expr}")
 
-    while len(tokens) > 1:
-        for i in range(len(tokens)):
-            if tokens[i] in ["*", "/"]:
-                t = generate_temp()
-                tac.append(f"{t} = {tokens[i-1]} {tokens[i]} {tokens[i+1]}")
-                tokens = tokens[:i-1] + [t] + tokens[i+2:]
-                break
-        else:
-            for i in range(len(tokens)):
-                if tokens[i] in ["+", "-"]:
-                    t = generate_temp()
-                    tac.append(f"{t} = {tokens[i-1]} {tokens[i]} {tokens[i+1]}")
-                    tokens = tokens[:i-1] + [t] + tokens[i+2:]
-                    break
+            elif isinstance(node, Print):
+                code.append(f"PRINT {node.var}")
 
-    tac.append(f"{left} = {tokens[0]}")
-
-    print("TAC:")
-    for line in tac:
-        print(line)
-
-    return tac
+        return code

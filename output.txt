@@ -1,0 +1,44 @@
+
+===== COMPILATION STARTED =====
+
+[1] Lexical Analysis
+  LET        -> let  (line 2)
+  IDENTIFIER -> x    (line 2)
+  ARROW      -> ->   (line 2)
+  NUMBER     -> 5    (line 2)
+  LET        -> let  (line 3)
+  IDENTIFIER -> y    (line 3)
+  ARROW      -> ->   (line 3)
+  IDENTIFIER -> x    (line 3)
+  PLUS       -> plus (line 3)
+  NUMBER     -> 3    (line 3)
+  SHOW       -> show (line 4)
+  IDENTIFIER -> y    (line 4)
+
+[2] Syntax Analysis
+  Assign(x = 5)
+  Assign(y = x + 3)
+  Print(y)
+
+[3] Semantic Analysis
+  x -> int
+  y -> int
+
+[4] Intermediate Code
+  1. x = 5
+  2. y = x + 3
+  3. PRINT y
+
+[5] Optimized Code
+  1. x = 5
+  2. y = x + 3
+  3. PRINT y
+
+[6] Target Code
+  1. SET x 5
+  2. LOAD x
+  3. ADD 3
+  4. SAVE y
+  5. OUT y
+
+===== COMPILATION SUCCESSFUL =====

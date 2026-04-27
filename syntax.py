@@ -1,3 +1,33 @@
+class ASTNode:
+    pass
+
+
+class Assign(ASTNode):
+    def __init__(self, var, expr):
+        self.var = var
+        self.expr = expr
+
+    def __repr__(self):
+        return f"Assign({self.var} = {self.expr})"
+
+
+class Print(ASTNode):
+    def __init__(self, var):
+        self.var = var
+
+    def __repr__(self):
+        return f"Print({self.var})"
+
+
+class BinOp(ASTNode):
+    def __init__(self, left, right):
+        self.left = left
+        self.right = right
+
+    def __repr__(self):
+        return f"{self.left} + {self.right}"
+
+
 class Parser:
     def __init__(self, tokens):
         self.tokens = tokens
@@ -6,64 +36,38 @@ class Parser:
     def current(self):
         return self.tokens[self.pos] if self.pos < len(self.tokens) else None
 
-    def eat(self, expected_type, expected_value=None):
-        token = self.current()
+    def eat(self, token_type):
+        tok = self.current()
+        if tok and tok.type == token_type:
+            self.pos += 1
+            return tok
+        raise SyntaxError(f"Expected {token_type}")
 
-        if token is None:
-            raise Exception("Syntax Error: Unexpected end of input")
-
-        if token.type != expected_type:
-            raise Exception(f"Syntax Error: Expected {expected_type}, got {token.type}")
-
-        if expected_value and token.value != expected_value:
-            raise Exception(f"Syntax Error: Expected '{expected_value}', got '{token.value}'")
-
-        self.pos += 1
-        return token
-
-    # =========================
-    # MAIN PARSE FUNCTION
-    # =========================
     def parse(self):
-        result = []
-
+        ast = []
         while self.current():
-            token = self.current()
+            tok = self.current()
 
-            if token.type == "KEYWORD":
-                result.append(self.parse_declaration())
+            if tok.type == "LET":
+                self.eat("LET")
+                var = self.eat("IDENTIFIER").value
+                self.eat("ARROW")
 
-            elif token.type == "IDENTIFIER":
-                result.append(self.parse_assignment())
+                left = self.eat("IDENTIFIER") if self.current().type == "IDENTIFIER" else self.eat("NUMBER")
+
+                if self.current() and self.current().type == "PLUS":
+                    self.eat("PLUS")
+                    right = self.eat("NUMBER")
+                    ast.append(Assign(var, BinOp(left.value, right.value)))
+                else:
+                    ast.append(Assign(var, left.value))
+
+            elif tok.type == "SHOW":
+                self.eat("SHOW")
+                var = self.eat("IDENTIFIER").value
+                ast.append(Print(var))
 
             else:
-                raise Exception(f"Syntax Error: Invalid start {token}")
+                self.pos += 1
 
-        return result
-
-    # =========================
-    # DECLARATION: int a;
-    # =========================
-    def parse_declaration(self):
-        self.eat("KEYWORD", "int")
-        var = self.eat("IDENTIFIER").value
-        self.eat("SEMICOLON")
-
-        return ('declare', 'int', var)
-
-    # =========================
-    # ASSIGNMENT: a = b + 3;
-    # =========================
-    def parse_assignment(self):
-        left = self.eat("IDENTIFIER").value
-        self.eat("OPERATOR", "=")
-
-        expr = []
-
-        while self.current() and self.current().type != "SEMICOLON":
-            expr.append(self.current().value)
-            self.pos += 1
-
-        self.eat("SEMICOLON")
-
-        return ('assign', left, expr)
+        return ast

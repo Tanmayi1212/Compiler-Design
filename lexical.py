@@ -1,73 +1,48 @@
 import re
+from dataclasses import dataclass
 
+
+@dataclass
 class Token:
-    def __init__(self, type_, value, line, column):
-        self.type = type_
-        self.value = value
-        self.line = line
-        self.column = column
-
-    def __repr__(self):
-        return f"{self.type}({self.value})"
+    type: str
+    value: str
+    line: int
 
 
-class LexerError(Exception):
-    pass
+TOKEN_SPEC = [
+    ("LET", r"let\b"),
+    ("SHOW", r"show\b"),
+    ("PLUS", r"plus\b"),
+    ("ARROW", r"->"),
+    ("NUMBER", r"\d+"),
+    ("IDENTIFIER", r"[a-zA-Z_]\w*"),
+    ("NEWLINE", r"\n"),
+    ("SKIP", r"[ \t]+"),
+    ("MISMATCH", r"."),
+]
 
 
 class Lexer:
-    KEYWORDS = {"int","float","if","else","while","for","return"}
-
-    TOKEN_SPEC = [
-        ("NUMBER",   r'\d+'),
-        ("ID",       r'[a-zA-Z_][a-zA-Z0-9_]*'),
-        ("OP",       r'[+\-*/=]'),
-        ("SEMI",     r';'),
-        ("SKIP",     r'[ \t]+'),
-        ("NEWLINE",  r'\n'),
-        ("MISMATCH", r'.'),
-    ]
-
     def __init__(self, code):
         self.code = code
 
     def tokenize(self):
         tokens = []
+        line = 1
 
-        regex = '|'.join(f'(?P<{name}>{pattern})'
-                         for name, pattern in self.TOKEN_SPEC)
-
-        line_num = 1
-        line_start = 0
+        regex = "|".join(f"(?P<{name}>{pattern})" for name, pattern in TOKEN_SPEC)
 
         for match in re.finditer(regex, self.code):
-            kind = match.lastgroup
+            name = match.lastgroup
             value = match.group()
-            column = match.start() - line_start
 
-            if kind == "NUMBER":
-                tokens.append(Token("NUMBER", value, line_num, column))
-
-            elif kind == "ID":
-                if value in self.KEYWORDS:
-                    tokens.append(Token("KEYWORD", value, line_num, column))
-                else:
-                    tokens.append(Token("IDENTIFIER", value, line_num, column))
-
-            elif kind == "OP":
-                tokens.append(Token("OPERATOR", value, line_num, column))
-
-            elif kind == "SEMI":
-                tokens.append(Token("SEMICOLON", value, line_num, column))
-
-            elif kind == "NEWLINE":
-                line_num += 1
-                line_start = match.end()
-
-            elif kind == "SKIP":
+            if name == "NEWLINE":
+                line += 1
+            elif name == "SKIP":
                 continue
-
-            elif kind == "MISMATCH":
-                raise LexerError(f"Unexpected character '{value}' at line {line_num}")
+            elif name == "MISMATCH":
+                raise SyntaxError(f"Unexpected character '{value}' at line {line}")
+            else:
+                tokens.append(Token(name, value, line))
 
         return tokens

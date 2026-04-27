@@ -1,85 +1,71 @@
-import argparse
-import sys
-
-# =========================
-# IMPORT COMPILER PHASES
-# =========================
-
-# Adjust module names based on your file structure
-from lexical import Lexer, LexerError
+from lexical import Lexer
 from syntax import Parser
-from semantic import semantic_analysis
-from icg import intermediate_code_generation
-from code_optimisation import optimize_tac
-from target_code_generation import TargetCodeGenerator
+from semantic import SemanticAnalyzer
+from icg import ICG
+from code_optimisation import Optimizer
+from target_code_generation import CodeGenerator
 
 
-# =========================
-# CORE PIPELINE FUNCTION
-# =========================
+def compile_code(code, output_path="output.txt"):
+    output_lines = []
 
-def compile(source_code):
-    try:
-        print("\n===== COMPILATION STARTED =====\n")
+    def emit(text=""):
+        print(text)
+        output_lines.append(text)
 
-        # 1. LEXER
-        print("[1] Lexical Analysis...")
-        lexer = Lexer(source_code)
-        tokens = lexer.tokenize()
+    emit("\n===== COMPILATION STARTED =====")
 
-        print("Tokens:")
-        for t in tokens:
-            print(t)
+    # Phase 1
+    emit("\n[1] Lexical Analysis")
+    lexer = Lexer(code)
+    tokens = lexer.tokenize()
+    type_width = max((len(tok.type) for tok in tokens), default=4)
+    value_width = max((len(str(tok.value)) for tok in tokens), default=5)
+    for tok in tokens:
+        emit(f"  {tok.type:<{type_width}} -> {tok.value:<{value_width}} (line {tok.line})")
 
-        # 2. PARSER
-        print("\n[2] Syntax Analysis...")
-        parser = Parser(tokens)
-        ast = parser.parse()
+    # Phase 2
+    emit("\n[2] Syntax Analysis")
+    parser = Parser(tokens)
+    ast = parser.parse()
+    for node in ast:
+        emit(f"  {node}")
 
-        print("AST:")
-        for stmt in ast:
-            print(stmt)
+    # Phase 3
+    emit("\n[3] Semantic Analysis")
+    semantic = SemanticAnalyzer()
+    symbols = semantic.analyze(ast)
+    for name, dtype in symbols.items():
+        emit(f"  {name} -> {dtype}")
 
-        # 3. SEMANTIC
-        print("\n[3] Semantic Analysis...")
-        sem_out = semantic_analysis(ast)
+    # Phase 4
+    emit("\n[4] Intermediate Code")
+    icg = ICG().generate(ast)
+    for idx, line in enumerate(icg, start=1):
+        emit(f"  {idx}. {line}")
 
-        # 4. ICG
-        print("\n[4] Intermediate Code Generation...")
-        tac = intermediate_code_generation(sem_out)
+    # Phase 5
+    emit("\n[5] Optimized Code")
+    opt = Optimizer().optimize(icg)
+    for idx, line in enumerate(opt, start=1):
+        emit(f"  {idx}. {line}")
 
-        # 5. OPTIMIZATION
-        print("\n[5] Optimization...")
-        opt = optimize_tac(tac)
+    # Phase 6
+    emit("\n[6] Target Code")
+    target = CodeGenerator().generate(opt)
+    for idx, line in enumerate(target, start=1):
+        emit(f"  {idx}. {line}")
 
-        # 6. CODE GEN
-        print("\n[6] Code Generation...")
-        tcg = TargetCodeGenerator()
-        final = tcg.generate(opt)
+    emit("\n===== COMPILATION SUCCESSFUL =====")
 
-        print("\n===== SUCCESS =====\n")
-        return final
-
-    except Exception as e:
-        print("\n❌ COMPILATION FAILED")
-        print(e)
-        sys.exit(1)
-
-
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("source")
-    args = parser.parse_args()
-
-    try:
-        with open(args.source) as f:
-            code = f.read()
-    except:
-        print("File not found")
-        sys.exit(1)
-
-    compile(code)
+    with open(output_path, "w") as f:
+        f.write("\n".join(output_lines) + "\n")
 
 
 if __name__ == "__main__":
-    main()
+    code = """
+    let x -> 5
+    let y -> x plus 3
+    show y
+    """
+    compile_code(code)
