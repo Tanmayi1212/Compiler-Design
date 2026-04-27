@@ -13,7 +13,15 @@ class CodeGenerator:
 
             elif len(parts) == 5:
                 target.append(f"LOAD {parts[2]}")
-                target.append(f"ADD {parts[4]}")
+                op = parts[3]
+                if op == "+":
+                    target.append(f"ADD {parts[4]}")
+                elif op == "-":
+                    target.append(f"SUB {parts[4]}")
+                elif op == "*":
+                    target.append(f"MUL {parts[4]}")
+                elif op == "/":
+                    target.append(f"DIV {parts[4]}")
                 target.append(f"SAVE {parts[0]}")
 
         return target

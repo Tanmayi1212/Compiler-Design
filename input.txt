@@ -1,5 +1,5 @@
 let a -> 2 plus 3
-let b -> a plus 4
-let c -> 6 plus 7
-let d -> b plus c
+let b -> a divide 4
+let c -> 6 minus 7
+let d -> b multiply c
 show d

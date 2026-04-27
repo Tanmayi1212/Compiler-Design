@@ -44,24 +44,32 @@ A modular **mini-compiler pipeline** implemented in Python that simulates the co
 
 ## 🧩 Mini Language Overview
 
-This compiler understands a tiny expression language with three statement forms:
+This compiler understands a tiny expression language with two statement forms:
 
-- **Assignment:** `let <identifier> -> <number | identifier | identifier plus number>`
+- **Assignment:** `let <identifier> -> <expression>`
 - **Print:** `show <identifier>`
+
+Expressions support binary operators with standard precedence:
+
+- `multiply` / `*` and `divide` / `/` have higher precedence than
+  `plus` / `+` and `minus` / `-`.
+- Operators associate left-to-right.
 
 Supported tokens:
 
-- Keywords: `let`, `show`, `plus`
-- Symbols: `->`
+- Keywords: `let`, `show`, `plus`, `minus`, `multiply`, `divide`
+- Symbols: `->`, `+`, `-`, `*`, `/`
 - Literals: integers like `0`, `12`, `345`
 - Identifiers: `x`, `total`, `value_1`
 
 ### Example Program
 
 ```text
-let x -> 5
-let y -> x plus 3
-show y
+let a -> 2 minus 5 plus 4 divide 8 multiply 6
+let b -> a plus 4
+let c -> 6 plus 7
+let d -> b plus c
+show d
 ```
 
 ---
@@ -73,7 +81,8 @@ show y
 Implemented in `lexical.py`. The lexer scans the source text and emits tokens with
 their type, value, and line number. Unexpected characters raise a syntax error.
 
-**Output:** a flat list of tokens like `LET`, `IDENTIFIER`, `ARROW`, `NUMBER`, etc.
+**Output:** a flat list of tokens like `LET`, `IDENTIFIER`, `ARROW`, `NUMBER`,
+`PLUS`, `MINUS`, `TIMES`, and `DIVIDE`.
 
 ### 2) Syntax Analysis
 
@@ -82,7 +91,7 @@ these node types:
 
 - `Assign(var = expr)`
 - `Print(var)`
-- `BinOp(left + right)`
+- `BinOp(left op right)` where `op` is `+`, `-`, `*`, or `/`
 
 **Output:** an ordered list of AST nodes that represent the program structure.
 
@@ -95,30 +104,35 @@ that variables used in `show` are defined earlier in the program.
 
 ### 4) Intermediate Code Generation (ICG)
 
-Implemented in `icg.py`. The AST is lowered into simple three-address style code:
+Implemented in `icg.py`. The AST is lowered into three-address code using
+temporaries for nested expressions:
 
 ```
-x = 5
-y = x + 3
-PRINT y
+t1 = 2 - 5
+t2 = 4 / 8
+t3 = t2 * 6
+t4 = t1 + t3
+a = t4
+PRINT a
 ```
 
 ### 5) Code Optimization
 
 Implemented in `code_optimisation.py`. A small constant-folding pass combines
-pure numeric additions, e.g. `a = 2 + 3` becomes `a = 5`.
+pure numeric operations for `+`, `-`, `*`, and `/` (integer division), e.g.
+`a = 2 + 3` becomes `a = 5`.
 
 ### 6) Target Code Generation
 
 Implemented in `target_code_generation.py`. The optimized ICG is translated into
-an assembly-like sequence:
+an assembly-like sequence with basic arithmetic instructions:
 
 ```
-SET x 5
-LOAD x
-ADD 3
-SAVE y
-OUT y
+SET a 5
+LOAD a
+MUL 2
+SAVE b
+OUT b
 ```
 
 ---

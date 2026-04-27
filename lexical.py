@@ -12,8 +12,8 @@ class Token:
 TOKEN_SPEC = [
     ("LET", r"let\b"),
     ("SHOW", r"show\b"),
-    ("PLUS", r"plus\b"),
-    ("ARROW", r"->"),
+    ("ASSIGN", r"->"),
+    ("OPERATOR", r"plus\b|minus\b|multiply\b|divide\b|\+|-|\*|/"),
     ("NUMBER", r"\d+"),
     ("IDENTIFIER", r"[a-zA-Z_]\w*"),
     ("NEWLINE", r"\n"),
@@ -43,6 +43,15 @@ class Lexer:
             elif name == "MISMATCH":
                 raise SyntaxError(f"Unexpected character '{value}' at line {line}")
             else:
+                if name == "OPERATOR":
+                    if value in {"plus", "+"}:
+                        value = "+"
+                    elif value in {"minus", "-"}:
+                        value = "-"
+                    elif value in {"multiply", "*"}:
+                        value = "*"
+                    elif value in {"divide", "/"}:
+                        value = "/"
                 tokens.append(Token(name, value, line))
 
         return tokens

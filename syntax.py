@@ -20,12 +20,13 @@ class Print(ASTNode):
 
 
 class BinOp(ASTNode):
-    def __init__(self, left, right):
+    def __init__(self, left, op, right):
         self.left = left
+        self.op = op
         self.right = right
 
     def __repr__(self):
-        return f"{self.left} + {self.right}"
+        return f"{self.left} {self.op} {self.right}"
 
 
 class Parser:
@@ -51,16 +52,9 @@ class Parser:
             if tok.type == "LET":
                 self.eat("LET")
                 var = self.eat("IDENTIFIER").value
-                self.eat("ARROW")
-
-                left = self.eat("IDENTIFIER") if self.current().type == "IDENTIFIER" else self.eat("NUMBER")
-
-                if self.current() and self.current().type == "PLUS":
-                    self.eat("PLUS")
-                    right = self.eat("IDENTIFIER") if self.current().type == "IDENTIFIER" else self.eat("NUMBER")
-                    ast.append(Assign(var, BinOp(left.value, right.value)))
-                else:
-                    ast.append(Assign(var, left.value))
+                self.eat("ASSIGN")
+                expr = self.parse_expr()
+                ast.append(Assign(var, expr))
 
             elif tok.type == "SHOW":
                 self.eat("SHOW")
@@ -71,3 +65,37 @@ class Parser:
                 self.pos += 1
 
         return ast
+
+    def parse_expr(self):
+        node = self.parse_term()
+
+        while self.current() and self.current().type == "OPERATOR" and self.current().value in {"+", "-"}:
+            op = self.current().value
+            self.eat("OPERATOR")
+            right = self.parse_term()
+            node = BinOp(node, op, right)
+
+        return node
+
+    def parse_term(self):
+        node = self.parse_factor()
+
+        while self.current() and self.current().type == "OPERATOR" and self.current().value in {"*", "/"}:
+            op = self.current().value
+            self.eat("OPERATOR")
+            right = self.parse_factor()
+            node = BinOp(node, op, right)
+
+        return node
+
+    def parse_factor(self):
+        tok = self.current()
+        if not tok:
+            raise SyntaxError("Unexpected end of input")
+
+        if tok.type == "IDENTIFIER":
+            return self.eat("IDENTIFIER").value
+        if tok.type == "NUMBER":
+            return self.eat("NUMBER").value
+
+        raise SyntaxError(f"Unexpected token {tok.type}")
