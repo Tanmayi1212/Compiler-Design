@@ -1,4 +1,4 @@
-# 🛠️ Mini Compiler in Python
+# Mini Compiler in Python
 
 A modular **mini-compiler pipeline** implemented in Python that simulates the core phases of a compiler:
 
@@ -11,24 +11,24 @@ A modular **mini-compiler pipeline** implemented in Python that simulates the co
 
 ---
 
-## 🚀 Features
+## Features
 
-- 🔍 Tokenization of source code
-- 🌳 Abstract Syntax Tree (AST) generation
-- 📘 Symbol Table construction
-- ⚙️ Three Address Code (TAC) generation
-- 🚀 Code optimization techniques:
+- Tokenization of source code
+- Abstract Syntax Tree (AST) generation
+- Symbol Table construction
+- Three Address Code (TAC) generation
+-  Code optimization techniques:
   - Constant Folding
   - Constant Propagation
   - Common Subexpression Elimination
   - Dead Code Elimination
-- 🧠 Target code generation (assembly-like output)
-- ❌ Strong error handling at every phase
-- 📂 Command-line execution support
+-  Target code generation (assembly-like output)
+-  Strong error handling at every phase
+-  Command-line execution support
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 - `main.py` - Orchestrates the full compilation pipeline and writes to `output.txt`.
 - `lexical.py` - Tokenizer for the mini language.
@@ -42,7 +42,7 @@ A modular **mini-compiler pipeline** implemented in Python that simulates the co
 
 ---
 
-## 🧩 Mini Language Overview
+##  Mini Language Overview
 
 This compiler understands a tiny expression language with two statement forms:
 
@@ -74,7 +74,7 @@ show d
 
 ---
 
-## 🔬 Compilation Pipeline (Detailed)
+##  Compilation Pipeline (Detailed)
 
 ### 1) Lexical Analysis
 
@@ -137,7 +137,7 @@ OUT b
 
 ---
 
-## ▶️ Running the Compiler
+##  Running the Compiler
 
 Run the pipeline with the built-in example program:
 
@@ -149,7 +149,7 @@ The compiler writes the full, step-by-step output to `output.txt`.
 
 ---
 
-## ✅ Notes
+## Notes
 
 - This project is intentionally small to illustrate the classic compiler phases.
 - You can replace the example program in `main.py` with the contents of `input.txt`
