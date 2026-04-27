@@ -1,1 +1,3 @@
-let 5 -> x
+let x -> 5
+let y -> x plus 3
+show y
