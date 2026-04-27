@@ -1,3 +1,5 @@
-let x -> 5
-let y -> x plus 3
-show y
+let a -> 2 plus 3
+let b -> a plus 4
+let c -> 6 plus 7
+let d -> b plus c
+show d

@@ -57,7 +57,7 @@ class Parser:
 
                 if self.current() and self.current().type == "PLUS":
                     self.eat("PLUS")
-                    right = self.eat("NUMBER")
+                    right = self.eat("IDENTIFIER") if self.current().type == "IDENTIFIER" else self.eat("NUMBER")
                     ast.append(Assign(var, BinOp(left.value, right.value)))
                 else:
                     ast.append(Assign(var, left.value))

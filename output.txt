@@ -2,43 +2,69 @@
 ===== COMPILATION STARTED =====
 
 [1] Lexical Analysis
+  LET        -> let  (line 1)
+  IDENTIFIER -> a    (line 1)
+  ARROW      -> ->   (line 1)
+  NUMBER     -> 2    (line 1)
+  PLUS       -> plus (line 1)
+  NUMBER     -> 3    (line 1)
   LET        -> let  (line 2)
-  IDENTIFIER -> x    (line 2)
+  IDENTIFIER -> b    (line 2)
   ARROW      -> ->   (line 2)
-  NUMBER     -> 5    (line 2)
+  IDENTIFIER -> a    (line 2)
+  PLUS       -> plus (line 2)
+  NUMBER     -> 4    (line 2)
   LET        -> let  (line 3)
-  IDENTIFIER -> y    (line 3)
+  IDENTIFIER -> c    (line 3)
   ARROW      -> ->   (line 3)
-  IDENTIFIER -> x    (line 3)
+  NUMBER     -> 6    (line 3)
   PLUS       -> plus (line 3)
-  NUMBER     -> 3    (line 3)
-  SHOW       -> show (line 4)
-  IDENTIFIER -> y    (line 4)
+  NUMBER     -> 7    (line 3)
+  LET        -> let  (line 4)
+  IDENTIFIER -> d    (line 4)
+  ARROW      -> ->   (line 4)
+  IDENTIFIER -> b    (line 4)
+  PLUS       -> plus (line 4)
+  IDENTIFIER -> c    (line 4)
+  SHOW       -> show (line 5)
+  IDENTIFIER -> d    (line 5)
 
 [2] Syntax Analysis
-  Assign(x = 5)
-  Assign(y = x + 3)
-  Print(y)
+  Assign(a = 2 + 3)
+  Assign(b = a + 4)
+  Assign(c = 6 + 7)
+  Assign(d = b + c)
+  Print(d)
 
 [3] Semantic Analysis
-  x -> int
-  y -> int
+  a -> int
+  b -> int
+  c -> int
+  d -> int
 
 [4] Intermediate Code
-  1. x = 5
-  2. y = x + 3
-  3. PRINT y
+  1. a = 2 + 3
+  2. b = a + 4
+  3. c = 6 + 7
+  4. d = b + c
+  5. PRINT d
 
 [5] Optimized Code
-  1. x = 5
-  2. y = x + 3
-  3. PRINT y
+  1. a = 5
+  2. b = a + 4
+  3. c = 13
+  4. d = b + c
+  5. PRINT d
 
 [6] Target Code
-  1. SET x 5
-  2. LOAD x
-  3. ADD 3
-  4. SAVE y
-  5. OUT y
+  1. SET a 5
+  2. LOAD a
+  3. ADD 4
+  4. SAVE b
+  5. SET c 13
+  6. LOAD b
+  7. ADD c
+  8. SAVE d
+  9. OUT d
 
 ===== COMPILATION SUCCESSFUL =====

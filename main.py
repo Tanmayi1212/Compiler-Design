@@ -1,3 +1,6 @@
+import sys
+from pathlib import Path
+
 from lexical import Lexer
 from syntax import Parser
 from semantic import SemanticAnalyzer
@@ -63,9 +66,14 @@ def compile_code(code, output_path="output.txt"):
 
 
 if __name__ == "__main__":
-    code = """
-    let x -> 5
-    let y -> x plus 3
-    show y
-    """
+    if len(sys.argv) > 1:
+        input_path = Path(sys.argv[1])
+        code = input_path.read_text(encoding="utf-8")
+    else:
+        code = """
+        let x -> 5
+        let y -> x plus 3
+        show y
+        """
+
     compile_code(code)
