@@ -1,0 +1,82 @@
+
+===== COMPILATION STARTED =====
+
+[1] Lexical Analysis
+  LET        -> let  (line 1)
+  IDENTIFIER -> a    (line 1)
+  ASSIGN     -> ->   (line 1)
+  NUMBER     -> 2    (line 1)
+  OPERATOR   -> +    (line 1)
+  NUMBER     -> 3    (line 1)
+  LET        -> let  (line 2)
+  IDENTIFIER -> b    (line 2)
+  ASSIGN     -> ->   (line 2)
+  IDENTIFIER -> a    (line 2)
+  OPERATOR   -> /    (line 2)
+  NUMBER     -> 4    (line 2)
+  LET        -> let  (line 3)
+  IDENTIFIER -> c    (line 3)
+  ASSIGN     -> ->   (line 3)
+  NUMBER     -> 6    (line 3)
+  OPERATOR   -> -    (line 3)
+  NUMBER     -> 7    (line 3)
+  LET        -> let  (line 4)
+  IDENTIFIER -> d    (line 4)
+  ASSIGN     -> ->   (line 4)
+  IDENTIFIER -> b    (line 4)
+  OPERATOR   -> *    (line 4)
+  IDENTIFIER -> c    (line 4)
+  SHOW       -> show (line 5)
+  IDENTIFIER -> d    (line 5)
+
+[2] Syntax Analysis
+  Assign(a = 2 + 3)
+  Assign(b = a / 4)
+  Assign(c = 6 - 7)
+  Assign(d = b * c)
+  Print(d)
+
+[3] Semantic Analysis
+  a -> int
+  b -> int
+  c -> int
+  d -> int
+
+[4] Intermediate Code
+  1. t1 = 2 + 3
+  2. a = t1
+  3. t2 = a / 4
+  4. b = t2
+  5. t3 = 6 - 7
+  6. c = t3
+  7. t4 = b * c
+  8. d = t4
+  9. PRINT d
+
+[5] Optimized Code
+  1. t1 = 5
+  2. a = t1
+  3. t2 = a / 4
+  4. b = t2
+  5. t3 = -1
+  6. c = t3
+  7. t4 = b * c
+  8. d = t4
+  9. PRINT d
+
+[6] Target Code
+  1. SET t1 5
+  2. SET a t1
+  3. LOAD a
+  4. DIV 4
+  5. SAVE t2
+  6. SET b t2
+  7. SET t3 -1
+  8. SET c t3
+  9. LOAD b
+  10. MUL c
+  11. SAVE t4
+  12. SET d t4
+  13. OUT d
+
+===== COMPILATION SUCCESSFUL =====

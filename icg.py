@@ -1,71 +1,33 @@
-# =========================================
-# INTERMEDIATE CODE GENERATION (ICG) PHASE
-# Input  : Output from Semantic Analysis Phase
-#          (Validated Expression)
-# Output : Three Address Code (TAC)
-# =========================================
-
-temp_count = 1
+from syntax import Assign, BinOp, Print
 
 
-def generate_temp():
-    global temp_count
-    temp = "t" + str(temp_count)
-    temp_count += 1
-    return temp
+class ICG:
+    def __init__(self):
+        self.temp_count = 0
 
+    def new_temp(self):
+        self.temp_count += 1
+        return f"t{self.temp_count}"
 
-def intermediate_code_generation(semantic_output):
-    print("----- Intermediate Code Generation Phase -----\n")
+    def generate_expr(self, expr, code):
+        if isinstance(expr, BinOp):
+            left = self.generate_expr(expr.left, code)
+            right = self.generate_expr(expr.right, code)
+            temp = self.new_temp()
+            code.append(f"{temp} = {left} {expr.op} {right}")
+            return temp
 
-    # Input from Semantic Analysis
-    # Example:
-    # ('a', ['b', '+', 'c', '*', 'd'])
+        return expr
 
-    left, tokens = semantic_output
+    def generate(self, ast):
+        code = []
 
-    print("Input from Semantic Analysis:")
-    print(semantic_output)
+        for node in ast:
+            if isinstance(node, Assign):
+                value = self.generate_expr(node.expr, code)
+                code.append(f"{node.var} = {value}")
 
-    print("\nOutput: Three Address Code (TAC)\n")
+            elif isinstance(node, Print):
+                code.append(f"PRINT {node.var}")
 
-    while len(tokens) > 1:
-        done = False
-
-        # First handle * and /
-        for i in range(len(tokens)):
-            if tokens[i] in ["*", "/"]:
-                temp = generate_temp()
-
-                print(f"{temp} = {tokens[i-1]} {tokens[i]} {tokens[i+1]}")
-
-                tokens = tokens[:i-1] + [temp] + tokens[i+2:]
-                done = True
-                break
-
-        if done:
-            continue
-
-        # Then handle + and -
-        for i in range(len(tokens)):
-            if tokens[i] in ["+", "-"]:
-                temp = generate_temp()
-
-                print(f"{temp} = {tokens[i-1]} {tokens[i]} {tokens[i+1]}")
-
-                tokens = tokens[:i-1] + [temp] + tokens[i+2:]
-                break
-
-        if len(tokens) == 1:
-            break
-
-    print(f"{left} = {tokens[0]}")
-
-
-# =========================================
-# Example Input from Semantic Analysis Phase
-# =========================================
-
-semantic_output = ('a', ['b', '+', 'c', '*', 'd'])
-
-intermediate_code_generation(semantic_output)
+        return code

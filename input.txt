@@ -1,0 +1,5 @@
+let a -> 2 plus 3
+let b -> a divide 4
+let c -> 6 minus 7
+let d -> b multiply c
+show d

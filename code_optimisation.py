@@ -103,3 +103,4 @@ class Optimizer:
 
     def _is_int(self, text):
         return re.fullmatch(r'-?\d+', text) is not None
+     
