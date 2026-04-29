@@ -1,27 +1,98 @@
+import re
+
 class CodeGenerator:
-    def generate(self, icg):
-        target = []
+    OPERATION_MAP = {
+        '+': 'ADD',
+        '-': 'SUB',
+        '*': 'MUL',
+        '/': 'DIV',
+    }
 
-        for line in icg:
-            parts = line.split()
+    JUMP_MAP = {
+        '<': 'JL',
+        '<=': 'JLE',
+        '>': 'JG',
+        '>=': 'JGE',
+        '==': 'JE',
+        '!=': 'JNE',
+    }
 
-            if parts[0] == "PRINT":
-                target.append(f"OUT {parts[1]}")
+    def generate(self, tac_program):
+        # Accept either a raw list of TAC lines or an object exposing .instructions.
+        tac_instructions = getattr(tac_program, 'instructions', tac_program)
+        assembly = []
+        for instruction in tac_instructions:
+            assembly.extend(self._translate_instruction(instruction))
+        return assembly
 
-            elif len(parts) == 3:
-                target.append(f"SET {parts[0]} {parts[2]}")
+    def generate_text(self, tac_program):
+        return '\n'.join(self.generate(tac_program))
 
-            elif len(parts) == 5:
-                target.append(f"LOAD {parts[2]}")
-                op = parts[3]
-                if op == "+":
-                    target.append(f"ADD {parts[4]}")
-                elif op == "-":
-                    target.append(f"SUB {parts[4]}")
-                elif op == "*":
-                    target.append(f"MUL {parts[4]}")
-                elif op == "/":
-                    target.append(f"DIV {parts[4]}")
-                target.append(f"SAVE {parts[0]}")
+    def _translate_instruction(self, instruction):
+        instruction = instruction.strip()
+        if not instruction:
+            return []
 
-        return target
+        if instruction.endswith(':'):
+            return [instruction]
+
+        print_match = re.fullmatch(r'print\s+(.+)', instruction)
+        if print_match:
+            value = print_match.group(1).strip()
+            return [
+                f'MOV R1, {value}',
+                'PRINT R1',
+            ]
+
+        if_match = re.fullmatch(r'if\s+(\S+)\s*([<>!=]=?|==|!=)\s*(\S+)\s+goto\s+(\S+)', instruction)
+        if if_match:
+            left, operator, right, label = if_match.groups()
+            if operator not in self.JUMP_MAP:
+                raise ValueError(f'Unsupported comparison operator {operator!r}')
+            return [
+                f'MOV R1, {left}',
+                f'MOV R2, {right}',
+                'CMP R1, R2',
+                f"{self.JUMP_MAP[operator]} {label}",
+            ]
+
+        goto_match = re.fullmatch(r'goto\s+(\S+)', instruction)
+        if goto_match:
+            return [f'JMP {goto_match.group(1)}']
+
+        func_match = re.fullmatch(r'func\s+([A-Za-z_]\w*):', instruction)
+        if func_match:
+            return [f"{func_match.group(1)}:"]
+
+        return_match = re.fullmatch(r'return\s*(\S+)?', instruction)
+        if return_match:
+            value = return_match.group(1)
+            if value:
+                return [f'MOV R1, {value}', 'RET']
+            return ['RET']
+
+        assign_match = re.fullmatch(r'([A-Za-z_]\w*)\s*=\s*(.+)', instruction)
+        if not assign_match:
+            raise ValueError(f'Unsupported TAC instruction: {instruction!r}')
+
+        target = assign_match.group(1)
+        expression = assign_match.group(2).strip()
+
+        binary_match = re.fullmatch(r'(\S+)\s*([+\-*/])\s*(\S+)', expression)
+        if binary_match:
+            left = binary_match.group(1)
+            operator = binary_match.group(2)
+            right = binary_match.group(3)
+            assembly_op = self.OPERATION_MAP[operator]
+            return [
+                f'MOV R1, {left}',
+                f'MOV R2, {right}',
+                f'{assembly_op} R1, R2',
+                f'MOV {target}, R1',
+            ]
+
+        return [f'MOV {target}, {expression}']
+
+    def execute_ir(self, ir_program):
+        _ = ir_program
+        return ['TODO: Assembly execution']
