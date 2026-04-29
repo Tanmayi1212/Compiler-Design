@@ -1,87 +1,98 @@
-# =========================================
-# TARGET CODE GENERATION PHASE
-# Input  : Optimized TAC (list of strings)
-# Output : Assembly-like Code
-# =========================================
+import re
 
-class TargetCodeGenerator:
-    def __init__(self):
-        self.reg_count = 1
-        self.var_to_reg = {}
+class CodeGenerator:
+    OPERATION_MAP = {
+        '+': 'ADD',
+        '-': 'SUB',
+        '*': 'MUL',
+        '/': 'DIV',
+    }
 
-    def get_register(self):
-        reg = f"R{self.reg_count}"
-        self.reg_count += 1
-        return reg
+    JUMP_MAP = {
+        '<': 'JL',
+        '<=': 'JLE',
+        '>': 'JG',
+        '>=': 'JGE',
+        '==': 'JE',
+        '!=': 'JNE',
+    }
 
-    def generate(self, tac_lines):
-        print("\n----- Target Code Generation Phase -----\n")
+    def generate(self, tac_program):
+        # Accept either a raw list of TAC lines or an object exposing .instructions.
+        tac_instructions = getattr(tac_program, 'instructions', tac_program)
+        assembly = []
+        for instruction in tac_instructions:
+            assembly.extend(self._translate_instruction(instruction))
+        return assembly
 
-        target_code = []
+    def generate_text(self, tac_program):
+        return '\n'.join(self.generate(tac_program))
 
-        for line in tac_lines:
-            parts = line.split()
+    def _translate_instruction(self, instruction):
+        instruction = instruction.strip()
+        if not instruction:
+            return []
 
-            # Case 1: a = b
-            if len(parts) == 3:
-                lhs = parts[0]
-                rhs = parts[2]
+        if instruction.endswith(':'):
+            return [instruction]
 
-                # If rhs already stored in register
-                if rhs in self.var_to_reg:
-                    target_code.append(f"MOV {lhs}, {self.var_to_reg[rhs]}")
-                else:
-                    target_code.append(f"MOV {lhs}, {rhs}")
+        print_match = re.fullmatch(r'print\s+(.+)', instruction)
+        if print_match:
+            value = print_match.group(1).strip()
+            return [
+                f'MOV R1, {value}',
+                'PRINT R1',
+            ]
 
-            # Case 2: t1 = a + b
-            else:
-                lhs = parts[0]
-                op1 = parts[2]
-                operator = parts[3]
-                op2 = parts[4]
+        if_match = re.fullmatch(r'if\s+(\S+)\s*([<>!=]=?|==|!=)\s*(\S+)\s+goto\s+(\S+)', instruction)
+        if if_match:
+            left, operator, right, label = if_match.groups()
+            if operator not in self.JUMP_MAP:
+                raise ValueError(f'Unsupported comparison operator {operator!r}')
+            return [
+                f'MOV R1, {left}',
+                f'MOV R2, {right}',
+                'CMP R1, R2',
+                f"{self.JUMP_MAP[operator]} {label}",
+            ]
 
-                reg = self.get_register()
+        goto_match = re.fullmatch(r'goto\s+(\S+)', instruction)
+        if goto_match:
+            return [f'JMP {goto_match.group(1)}']
 
-                # Use register if already computed
-                op1_val = self.var_to_reg.get(op1, op1)
-                op2_val = self.var_to_reg.get(op2, op2)
+        func_match = re.fullmatch(r'func\s+([A-Za-z_]\w*):', instruction)
+        if func_match:
+            return [f"{func_match.group(1)}:"]
 
-                if operator == "+":
-                    instr = "ADD"
-                elif operator == "-":
-                    instr = "SUB"
-                elif operator == "*":
-                    instr = "MUL"
-                elif operator == "/":
-                    instr = "DIV"
+        return_match = re.fullmatch(r'return\s*(\S+)?', instruction)
+        if return_match:
+            value = return_match.group(1)
+            if value:
+                return [f'MOV R1, {value}', 'RET']
+            return ['RET']
 
-                target_code.append(f"{instr} {reg}, {op1_val}, {op2_val}")
+        assign_match = re.fullmatch(r'([A-Za-z_]\w*)\s*=\s*(.+)', instruction)
+        if not assign_match:
+            raise ValueError(f'Unsupported TAC instruction: {instruction!r}')
 
-                # Store result in register map
-                self.var_to_reg[lhs] = reg
+        target = assign_match.group(1)
+        expression = assign_match.group(2).strip()
 
-        print("Target Code:\n")
-        for line in target_code:
-            print(line)
+        binary_match = re.fullmatch(r'(\S+)\s*([+\-*/])\s*(\S+)', expression)
+        if binary_match:
+            left = binary_match.group(1)
+            operator = binary_match.group(2)
+            right = binary_match.group(3)
+            assembly_op = self.OPERATION_MAP[operator]
+            return [
+                f'MOV R1, {left}',
+                f'MOV R2, {right}',
+                f'{assembly_op} R1, R2',
+                f'MOV {target}, R1',
+            ]
 
-        return target_code
-    
-# if __name__ == "__main__":
+        return [f'MOV {target}, {expression}']
 
-#     optimized_tac = [
-#         "t1 = 5",
-#         "t2 = 5 + 4",
-#         "t3 = t1",
-#         "t4 = t2",
-#         "t5 = a + b",
-#         "t6 = t5",
-#         "a = t2",
-#         "b = 10"
-#     ]
-
-#     print("Optimized TAC:\n")
-#     for line in optimized_tac:
-#         print(line)
-
-#     tcg = TargetCodeGenerator()
-#     tcg.generate(optimized_tac)
+    def execute_ir(self, ir_program):
+        _ = ir_program
+        return ['TODO: Assembly execution']
